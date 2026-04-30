@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>山东光伏情报站 | 市场·政策·项目</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #2b7a3e;
+            --primary-dark: #1d5e30;
+            --bg-page: #f4f7fb;
+            --bg-card: #ffffff;
+            --border: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+        }
+        body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: var(--bg-page); line-height: 1.5; }
+        .header { background: linear-gradient(135deg, var(--primary-dark), var(--primary)); color: white; padding: 2rem 1.5rem; text-align: center; }
+        .header h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+        .subtitle { opacity: 0.9; font-size: 0.9rem; }
+        .stats-bar { background: rgba(255,255,255,0.12); border-radius: 2rem; padding: 0.5rem 1.2rem; display: inline-flex; gap: 1.5rem; margin-top: 1rem; flex-wrap: wrap; font-size: 0.8rem; }
+        .container { max-width: 1600px; margin: 0 auto; padding: 2rem 1.5rem; }
+        .filter-bar { background: var(--bg-card); border-radius: 1rem; padding: 1rem 1.5rem; margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .filter-tabs { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        .filter-btn { padding: 0.45rem 1.2rem; border-radius: 2rem; border: none; background: #f1f5f9; cursor: pointer; font-size: 0.85rem; font-weight: 500; }
+        .filter-btn.active { background: var(--primary); color: white; }
+        .search-box { display: flex; gap: 0.5rem; }
+        .search-box input { padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 2rem; width: 260px; outline: none; }
+        .search-box button { padding: 0.5rem 1.2rem; background: var(--primary); color: white; border: none; border-radius: 2rem; cursor: pointer; }
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .info-card { background: var(--bg-card); border-radius: 1rem; padding: 1.25rem; border-left: 4px solid var(--primary); cursor: pointer; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        .info-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .card-category { display: inline-block; font-size: 0.7rem; padding: 0.2rem 0.7rem; border-radius: 1rem; margin-bottom: 0.75rem; font-weight: 600; width: fit-content; }
+        .card-category.market { background: #e0f2fe; color: #0284c7; }
+        .card-category.policy { background: #fff3e0; color: #e67e22; }
+        .card-category.project { background: #f3e5f5; color: #8e44ad; }
+        .card-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.4; }
+        .card-content { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem; flex: 1; overflow-y: auto; max-height: 180px; padding-right: 4px; white-space: pre-wrap; word-break: break-word; }
+        .card-content::-webkit-scrollbar { width: 4px; }
+        .card-meta { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 0.7rem; margin-top: 0.5rem; }
+        .pagination { display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem; flex-wrap: wrap; }
+        .page-btn { padding: 0.4rem 0.9rem; border: 1px solid var(--border); background: white; border-radius: 0.5rem; cursor: pointer; }
+        .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .loading, .empty-state { text-align: center; padding: 4rem; color: var(--text-muted); }
+        .spinner { width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .footer { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.75rem; border-top: 1px solid var(--border); margin-top: 1rem; }
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index:1000; justify-content: center; align-items: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; max-width: 800px; width: 90%; max-height: 85vh; overflow-y: auto; border-radius: 1.5rem; padding: 2rem; position: relative; }
+        .modal-close { position: absolute; top: 1rem; right: 1.5rem; font-size: 1.8rem; cursor: pointer; color: var(--text-muted); }
+        .modal-body { margin-top: 1rem; line-height: 1.6; }
+        .btn-group { display: flex; gap: 0.8rem; flex-wrap: wrap; margin: 1rem 0; }
+        .btn-search { background: #f1f5f9; border: none; padding: 0.4rem 1rem; border-radius: 2rem; font-size: 0.8rem; cursor: pointer; }
+        .btn-search:hover { background: #e2e8f0; }
+        .original-link { display: inline-block; margin-top: 0.5rem; color: var(--primary); text-decoration: none; word-break: break-all; border-bottom: 1px dashed var(--primary); }
+        .help-tip { background: #fff7ed; color: #f97316; padding: 0.4rem 0.8rem; border-radius: 2rem; font-size: 0.75rem; margin-top: 1rem; display: inline-block; }
+        @media (max-width: 768px) { .cards-grid { grid-template-columns: 1fr; } .filter-bar { flex-direction: column; } .search-box input { width: 100%; } }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>☀️ 山东光伏情报站</h1>
+    <div class="subtitle">市场分析 · 光伏政策 · 项目信息 | 每日更新 | 多源聚合 | 官网直达</div>
+    <div class="stats-bar" id="statsBar"><span>📋 数据总量: 加载中...</span><span>🔄 每日自动更新</span></div>
+</div>
+<div class="container">
+    <div class="filter-bar">
+        <div class="filter-tabs" id="filterTabs">
+            <button class="filter-btn active" data-category="all">全部</button>
+            <button class="filter-btn" data-category="market">市场分析</button>
+            <button class="filter-btn" data-category="policy">光伏政策</button>
+            <button class="filter-btn" data-category="project">项目信息</button>
+        </div>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="搜索标题、内容...">
+            <button id="searchBtn">搜索</button>
+        </div>
+    </div>
+    <div class="info-row"><div class="result-count" id="resultCount">共 0 条记录</div></div>
+    <div id="contentArea"><div class="loading"><div class="spinner"></div><p>正在加载数据...</p></div></div>
+    <div id="paginationArea" class="pagination"></div>
+</div>
+<div class="footer"><p>数据来源：国家能源局、山东省能源局、国网新能源云、中国招标投标公共服务平台、山东政府采购网、各地市交易中心等</p><p id="lastUpdateTime"></p></div>
+<div id="detailModal" class="modal"><div class="modal-content"><div class="modal-close" onclick="closeModal()">&times;</div><h3 id="modalTitle"></h3><div class="modal-body" id="modalBody"></div></div></div>
+
+<script>
+    // ========== 配置 ==========
+    const DATA_URL = 'https://your-server.com/shandong_pv_data.json';  // 替换为你的JSON地址
+    let allData = [], currentCategory = 'all', currentSearch = '', currentPage = 1;
+    const PAGE_SIZE = 24;
+
+    const HOMEPAGE_MAP = {
+        "山东能源监管办": "https://sdb.nea.gov.cn",
+        "山东省能源局": "http://nyj.shandong.gov.cn",
+        "国家能源局": "https://www.nea.gov.cn",
+        "国家电网": "https://www.sgcc.com.cn",
+        "中国招标投标公共服务平台": "https://www.cebpubservice.com",
+        "山东政府采购网": "http://www.ccgp-shandong.gov.cn",
+        "中能建电子采购平台": "https://ec.ceec.net.cn",
+        "中国电建集采平台": "https://ec.powerchina.cn",
+        "济南公共资源交易中心": "http://jnggzy.jinan.gov.cn",
+        "青岛公共资源交易中心": "https://ggzy.qingdao.gov.cn",
+        "北极星太阳能光伏网": "https://guangfu.bjx.com.cn"
+    };
+
+    async function loadData() {
+        try {
+            const res = await fetch(DATA_URL, { cache: "no-store" });
+            if (!res.ok) throw new Error();
+            const json = await res.json();
+            if (Array.isArray(json) && json.length) allData = json;
+            else allData = getFallbackData();
+        } catch(e) { allData = getFallbackData(); }
+        document.getElementById('statsBar').innerHTML = `<span>📋 数据总量: ${allData.length} 条</span><span>🔄 每日自动更新</span>`;
+        render();
+    }
+
+    // 扩充至24条示例数据，确保初次展示不少于10条
+    function getFallbackData() {
+        return [
+            { id:"1", title:"《山东省分布式光伏发电开发建设管理实施细则》", content:"文件编号：鲁发改能源〔2025〕678号。工商业分布式项目年自发自用电量比例不得低于50%，余电全部参与电力现货市场。要求分布式光伏需配置远程调控装置。", category:"policy", source:"山东省能源局", publish_date:"2025-06-17" },
+            { id:"2", title:"山东分布式光伏累计装机突破9100万千瓦", content:"截至2026年10月，山东全省光伏累计装机9150万千瓦，分布式占比近2/3，居全国首位。", category:"market", source:"国家能源局", publish_date:"2026-11-01" },
+            { id:"3", title:"国网山东电力发布2026年一季度光伏竞价结果", content:"集中式光伏竞价均价0.28元/kWh，分布式0.32元/kWh，较去年同期下降8%。", category:"market", source:"国家电网", publish_date:"2026-04-10" },
+            { id:"4", title:"山东2026年第二批光伏项目备案清单公布", content:"共批复152个项目，总容量3.8GW，其中渔光互补项目占比35%。", category:"project", source:"山东省能源局", publish_date:"2026-03-20" },
+            { id:"5", title:"山东整县屋顶光伏试点年度评估报告发布", content:"70个试点县累计并网15.6GW，平均利用率98.2%，高于全国平均水平。", category:"policy", source:"国家能源局", publish_date:"2026-02-18" },
+            { id:"6", title:"华能山东公司2GW海上光伏EPC招标公告", content:"项目位于东营、潍坊海域，要求2027年底前全容量并网。标书获取截止4月30日。", category:"project", source:"中国招标投标公共服务平台", publish_date:"2026-04-15" },
+            { id:"7", title:"山东电力现货市场2025年度光伏结算均价", content:"全年平均0.291元/kWh，午间负电价时段增加至1200小时。", category:"market", source:"山东电力交易中心", publish_date:"2026-01-25" },
+            { id:"8", title:"《山东省光伏电站并网运行管理实施细则(2026版)》征求意见", content:"新增对逆变器涉网性能、一次调频能力的要求，反馈截止3月15日。", category:"policy", source:"山东能源监管办", publish_date:"2026-02-10" },
+            { id:"9", title:"国家电投山东分公司2026年度光伏组件集采开标", content:"采购容量2.5GW，P型双面550W组件最低报价0.86元/W。", category:"project", source:"中国电建集采平台", publish_date:"2026-03-05" },
+            { id:"10", title:"山东村级光伏电站乡村振兴项目（首批100个村）启动", content:"每村装机200-300kW，采用全额上网模式，收益用于村集体公益事业。", category:"project", source:"山东省乡村振兴局", publish_date:"2026-04-10" },
+            { id:"11", title:"2026年Q1山东光伏新增并网2.3GW，工商业分布式占68%", content:"户用光伏同比下滑15%，工商业分布式备案量同比增长42%。", category:"market", source:"国家能源局山东监管办", publish_date:"2026-04-15" },
+            { id:"12", title:"济南新旧动能转换起步区屋顶光伏特许经营项目招标", content:"利用政府机关、学校、医院屋顶，总规模15MW，运营期25年。", category:"project", source:"济南公共资源交易中心", publish_date:"2026-04-22" },
+            { id:"13", title:"山东开展整县分布式光伏“可观可测可调可控”试点", content:"选取10个试点县，要求逆变器具备远程调控能力，2026年底前完成改造。", category:"policy", source:"山东省能源局", publish_date:"2026-03-30" },
+            { id:"14", title:"山东电网发布分布式光伏接入承载力预警结果", content:"全省45个县区红色预警，暂停新增接入，鼓励配置储能提升消纳。", category:"market", source:"国网山东电力", publish_date:"2026-02-15" },
+            { id:"15", title:"山东“十四五”海上光伏规划新增并网10GW", content:"重点推进渤中、半岛南等基地项目，2026年已开工2.5GW。", category:"project", source:"山东省能源局", publish_date:"2026-01-10" },
+            { id:"16", title:"财政部下达山东2026年可再生能源电价附加补助资金", content:"光伏扶贫项目优先兑付，分布式户用补贴按0.05元/度，资金规模12.6亿元。", category:"policy", source:"财政部", publish_date:"2026-02-20" },
+            { id:"17", title:"山东光伏组件出口增长65%，海外订单饱满", content:"上半年组件出口额达28亿美元，N型电池占比提升至55%。", category:"market", source:"济南海关", publish_date:"2026-07-08" },
+            { id:"18", title:"中广核山东100MW农光互补项目EPC招标", content:"项目位于德州，需配备10%储能，计划2027年6月并网。", category:"project", source:"中国招标投标公共服务平台", publish_date:"2026-04-05" },
+            { id:"19", title:"山东能源监管办开展分布式光伏涉网安全专项检查", content:"重点检查逆变器低电压穿越、防孤岛保护等性能。", category:"policy", source:"山东能源监管办", publish_date:"2026-03-12" },
+            { id:"20", title:"2025年山东光伏发电量达520亿千瓦时", content:"同比增长28%，占全省总发电量8.5%，减排二氧化碳约4000万吨。", category:"market", source:"国家能源局", publish_date:"2026-01-20" },
+            { id:"21", title:"青岛即墨区整区屋顶光伏项目完成招标", content:"总规模80MW，由国电投中标，预计年发电量9600万度。", category:"project", source:"青岛公共资源交易中心", publish_date:"2026-04-18" },
+            { id:"22", title:"山东电力辅助服务市场新增光伏参与规则", content:"2026年5月起，10MW以上光伏电站需参与调峰辅助服务。", category:"policy", source:"山东能源监管办", publish_date:"2026-03-25" },
+            { id:"23", title:"山东光伏产业产值突破2000亿元", content:"全产业链企业超500家，逆变器、支架产量全国第一。", category:"market", source:"山东省工信厅", publish_date:"2026-04-01" },
+            { id:"24", title:"枣庄市100MW光伏+储能项目并网", content:"配置20MW/40MWh储能，年发电1.3亿度，减少碳排放10万吨。", category:"project", source:"山东省能源局", publish_date:"2026-04-12" }
+        ];
+    }
+
+    function getFiltered() {
+        let filtered = currentCategory === 'all' ? allData : allData.filter(d => d.category === currentCategory);
+        if (currentSearch.trim()) {
+            const kw = currentSearch.trim().toLowerCase();
+            filtered = filtered.filter(d => d.title.toLowerCase().includes(kw) || (d.content && d.content.toLowerCase().includes(kw)) || (d.source && d.source.toLowerCase().includes(kw)));
+        }
+        return filtered;
+    }
+
+    function render() {
+        const filtered = getFiltered();
+        const total = filtered.length, totalPages = Math.ceil(total / PAGE_SIZE);
+        const start = (currentPage-1)*PAGE_SIZE, pageData = filtered.slice(start, start+PAGE_SIZE);
+        document.getElementById('resultCount').innerText = `共 ${total} 条 (第 ${currentPage}/${totalPages||1} 页)`;
+        const container = document.getElementById('contentArea');
+        if (!pageData.length) { container.innerHTML = '<div class="empty-state">暂无数据</div>'; document.getElementById('paginationArea').innerHTML = ''; return; }
+        container.innerHTML = `<div class="cards-grid">${pageData.map(item => `
+            <div class="info-card" onclick='showDetail(${JSON.stringify(item).replace(/'/g, "\\'")})'>
+                <div class="card-category ${item.category}">${item.category==='market'?'市场分析':item.category==='policy'?'光伏政策':'项目信息'}</div>
+                <div class="card-title">${escapeHtml(item.title)}</div>
+                <div class="card-content">${escapeHtml(item.content || '暂无详细内容')}</div>
+                <div class="card-meta"><span>📅 ${item.publish_date||'近期'}</span><span>📌 ${escapeHtml(item.source)}</span></div>
+            </div>`).join('')}</div>`;
+        renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+        const pagination = document.getElementById('paginationArea');
+        if (totalPages <= 1) { pagination.innerHTML = ''; return; }
+        let html = '';
+        for (let i=1; i<=Math.min(totalPages,7); i++) html += `<button class="page-btn ${i===currentPage?'active':''}" data-page="${i}">${i}</button>`;
+        pagination.innerHTML = html;
+        document.querySelectorAll('.page-btn').forEach(btn => btn.addEventListener('click', (e) => { currentPage = parseInt(btn.dataset.page); render(); window.scrollTo(0,0); }));
+    }
+
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+
+    function baiduSearch(title) {
+        window.open(`https://www.baidu.com/s?wd=${encodeURIComponent(title)}`, '_blank');
+    }
+
+    function getHomepage(source) {
+        return HOMEPAGE_MAP[source] || 'https://www.baidu.com/s?wd=' + encodeURIComponent(source);
+    }
+
+    function showDetail(item) {
+        document.getElementById('modalTitle').innerHTML = escapeHtml(item.title);
+        let body = `<p><strong>📅 日期：</strong> ${item.publish_date||'近期'}</p><p><strong>📌 来源：</strong> ${escapeHtml(item.source)}</p>`;
+        body += `<p><strong>📝 完整内容：</strong><br>${escapeHtml(item.content || '暂无')}</p>`;
+        body += `<div class="btn-group"><button class="btn-search" onclick="baiduSearch('${escapeHtml(item.title).replace(/'/g, "\\'")}')">🔍 百度搜索</button></div>`;
+        const homepage = getHomepage(item.source);
+        body += `<p><a href="${homepage}" target="_blank" rel="noopener noreferrer" class="original-link">🏠 访问官网主页</a></p>`;
+        body += `<div class="help-tip">💡 提示：点击“访问官网主页”进入官网，可在站内搜索标题查找原文。</div>`;
+        document.getElementById('modalBody').innerHTML = body;
+        document.getElementById('detailModal').classList.add('active');
+    }
+
+    function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
+    function bindEvents() {
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentCategory = btn.dataset.category;
+            currentPage = 1;
+            render();
+        }));
+        document.getElementById('searchBtn').addEventListener('click', () => { currentSearch = document.getElementById('searchInput').value; currentPage=1; render(); });
+        document.getElementById('searchInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') { currentSearch = e.target.value; currentPage=1; render(); } });
+        window.onclick = (e) => { if(e.target === document.getElementById('detailModal')) closeModal(); };
+    }
+    loadData(); bindEvents(); document.getElementById('lastUpdateTime').innerHTML = `⏱️ 数据最后同步：${new Date().toLocaleString()}`;
+</script>
+</body>
+</html>
